@@ -28,6 +28,10 @@ http://ec2-52-32-29-86.us-west-2.compute.amazonaws.com/
 - Download the key to your local machine
 - SSH into the instance using `ssh ubuntu@52.32.29.86 -i your_key_name.pem`
 
+## Configure firewall
+- From the instance page open the "Networking" tab
+- Add two ports under the "Firewall" section - a custom TCP port 2200 and UDP port 123 
+
 # Part II: Initial Server Configuration
 
 ## Keep system up-to-date
@@ -45,8 +49,11 @@ http://ec2-52-32-29-86.us-west-2.compute.amazonaws.com/
 - Use `sudo timedatectl set-timezone UTC` to change the timezone to UTC (if it isn't already)
 
 ## Update UFW (Uncomplicated Firewall) setting
-- Deny all incoming conneccts on ports with `sudo ufw default deny incoming`
--
+- Deny all incoming connections on ports with `sudo ufw default deny incoming`
+- Allow outgoing traffic with `sudo ufw default allow outgoing`
+- Enable SSH connections on port 2200 with `sudo ufw allow 2200/tcp`
+- Allow HTTP on port 80 and NTP on port 123 with `sudo ufw allow www` and `sudo ufw allow ntp`
+- Restart the SSH service with `sudo service ssh restart`
 
 # Part III: Create account grader
 
@@ -72,7 +79,7 @@ http://ec2-52-32-29-86.us-west-2.compute.amazonaws.com/
 - Install the mod_wsgi package with `sudo apt-get install libapache2-mod-wsgi`
 - Install Git with `sudo apt-get install git`
 
-## PostgreSQL and Database Setup
+## PostgreSQL and database setup
 - Install Postgres with `sudo apt-get install postgresql`
 - Switch to the postgres user and run the postgreSQL shell with `sudo su - postgres` and then `psql`
 - Create the catalog database with `CREATE DATABASE catalog;`
@@ -82,7 +89,7 @@ http://ec2-52-32-29-86.us-west-2.compute.amazonaws.com/
 - Exit the postgres account and console with `\q` followed by `exit`
 - Install psycopg2 with `sudo apt-get -qqy install postgresql python-psycopg2`
 
-## Python Packages
+## Python packages
 - install pip with `sudo apt-get install python-pip`
 - install all other associated package with `sudo pip install <package_name>`. The packages used in this project are listed below:
     - `Flask`
@@ -92,7 +99,7 @@ http://ec2-52-32-29-86.us-west-2.compute.amazonaws.com/
     - `sqlalchemy`
     - `Flask-SQLAlchemy`
 
-## Setup Item Catalog
+## Setup project
 - Change the directory into the Apache www folder with `cd /var/www/`
 - Create a folder called FlaskApp inside with `sudo mkdir FlaskApp` and change into it with `cd FlaskApp`
 - Clone the Item Catalog project into the working directory with `sudo git clone -b server https://github.com/zqtcao/fsnd-catalog.git .`
@@ -133,10 +140,17 @@ application.secret_key = 'Add your secret key'
 ```
 - Enable the virtual host for the project with `sudo a2ensite FlaskApp.conf`
 
-## Final preparations
-- Get the host name for your particular server IP http://www.hcidata.info/host2ip.htm
+## Final preparations and deployment
+- Get the hostname for your particular server IP http://www.hcidata.info/host2ip.htm
 - In the Google Developer Console, find the OAuth credentials for the associated application
-- Add
+- Add the hostname to Authorized JavaScript origins and Authorized redirect URIs. If your previous project had redirect URIs such as `localhost:5000/login`, modify it to become `<hostname>/login`
+- cd into `/var/www/FlaskApp/FlaskApp` 
+- Repeat this process with the `redirect_uris` and `javascript_origins` located within `client_secrets.json`
+- Populate the database with `sudo python db_pop.py`
+- Start the Apache2 instance with `sudo service apache2 start`
+
+## Launch app
+- Open your browser and go to http://ec2-52-32-29-86.us-west-2.compute.amazonaws.com/
 
 # References
 The following resources were very helpful towards completing this project.
